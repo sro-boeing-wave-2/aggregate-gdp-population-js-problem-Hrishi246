@@ -19,7 +19,7 @@ const writer = (filepath, data) => new Promise((resolve, reject) => {
 });
 
 
-const aggregate = (filepath) => {
+const aggregate = filepath => new Promise((resolve, reject) => {
   Promise.all([reader(filepath), reader('mapping.json')]).then((values) => {
     const [header, ...rows] = values[0].replace(/"/g, '').split('\n');
     const jsonMapping = JSON.parse(values[1]);
@@ -42,9 +42,16 @@ const aggregate = (filepath) => {
         outputString[jsonMapping[country]].GDP_2012 += parseFloat(row.split(',')[gdpIndex]);
       }
     });
+    // console.log(outputString);
     delete outputString[undefined];
-    writer('output/output.json', outputString);
+    writer('output/output.json', outputString).then(() => {
+      resolve();
+    }).catch((err) => {
+      reject(err);
+    });
   });
-};
+});
+
+
 aggregate('data/datafile.csv');
 module.exports = aggregate;
